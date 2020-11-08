@@ -21,7 +21,6 @@ We are scrapping the reviews of companies on Trustpilot.com.  For each review we
 beautifulsoup4 == 4.9.3
 pandas == 1.1.3
 requests == 2.24.0
-
 ```
 
 ## Setup
@@ -31,4 +30,8 @@ $ pip install -r requirements.txt
 
 ## Usage
 - Set the company's review to scrap by setting the variable `COMPANY` and the number of pages to scrap by setting the variable `PAGES`.
-- Run the jupyter notebook web_scrapping.ipynb.
+- Run : 
+```
+$ python web_scrapping.py
+```
+- Alternatively, run the jupyter notebook web_scrapping.ipynb.
