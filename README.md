@@ -29,9 +29,15 @@ $ pip install -r requirements.txt
 ```
 
 ## Usage
-- Set the company's review to scrap by setting the variable `COMPANY` and the number of pages to scrap by setting the variable `PAGES`.
-- Run : 
+- Run and choose your company to scrap from and the number of pages (20 reviews per pages).
+ If you would like to scrap all pages enter 'all': 
 ```
-$ python web_scrapping.py
+$ python web_scrapping.py --company --pages
 ```
-- Alternatively, run the jupyter notebook web_scrapping.ipynb.
+Example:
+```
+$ python web_scrapping.py www.monday.com 20
+```
+
+## ERD
+![ERD](/Users/alberttamman/Documents/ITC/project/erd_trustpilot.png)
