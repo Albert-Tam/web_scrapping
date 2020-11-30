@@ -2,10 +2,11 @@ import mysql.connector
 
 
 def create_db():
+    my_str = ''
     my_db = mysql.connector.connect(
         host="localhost",
-        user="root",
-        password="123456"
+        user="ashi",
+        password = my_str
     )
 
     my_cursor = my_db.cursor()
@@ -51,7 +52,6 @@ def create_db():
       );  
     """)
 
-    # sql = """INSERT INTO users """
 
-
-create_db()
+if __name__ == '__main__':
+    create_db()
