@@ -21,14 +21,33 @@ def scrap():
     contents = []
     rev_wrote = []
     replies = []
+    website = []
+    urls = []
     PAGES = 10
     COMPANY = 'www.monday.com'
 
     for p in range(1, PAGES):
+
         page_url = requests.get('https://www.trustpilot.com/review/' + COMPANY + '?page=' + str(p))
         soup = BeautifulSoup(page_url.content, 'html.parser')
         review_card = soup.find_all('div', class_='review-card')
+
+        # find website of the company
+        # I do it just one time
+        # TODO website name, you can use it if you want
+        if p == 1:
+            web_tag = soup.find_all('a', class_="badge-card__section badge-card__section--hoverable company_website")
+            for a in web_tag:
+                website.append(a['href'])
+
+        # get url for each user
+        user_url = soup.find_all('a', href=True)
+        for a in user_url:
+            user_id = a['href']
+            if '/users/5' in user_id and user_id not in urls:
+                urls.append(user_id)
         for review in review_card:
+
             # Username
             name = review.find('div', class_='consumer-information__name').get_text(strip=True)
             names.append(name)
@@ -41,7 +60,6 @@ def scrap():
             # Review content
             if review.find('p', class_='review-content__text'):
                 content = review.find('p', class_='review-content__text').get_text(strip=True)
-
             else:
                 content = None
             contents.append(content)
@@ -55,14 +73,36 @@ def scrap():
             else:
                 replies.append(False)
 
+    # country and parse another page
+    countries = parse_another_page(urls)
+
+    # get the id of each user
+    # TODO you can use it if you want
+    id = []
+    for i in urls:
+        id.append(i.replace('/users/', ''))
+
     reviews_dict = {'names': names,
                     'ratings': ratings,
                     'titles': titles,
                     'contents': contents,
                     'rev_wrote': rev_wrote,
-                    'replies': replies}
+                    'replies': replies,
+                    'countries': countries
+                    }
 
     return reviews_dict
+
+
+def parse_another_page(urls):
+    lst = []
+    for url in urls:
+        page_url = requests.get('https://www.trustpilot.com/' + url)
+        soup = BeautifulSoup(page_url.content, 'html.parser')
+        countries = soup.find('div', class_='user-summary-location')
+        if countries is not None:
+            lst.append(countries.text.strip().strip('\n'))
+    return lst
 
 
 def export_csv():
