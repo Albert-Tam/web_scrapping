@@ -7,6 +7,7 @@ Scraps reviews from Trustpilot.
 * [Requirements](#requirements)
 * [Setup](#setup)
 * [Usage](#usage)
+* [ERD](#erd)
 
 ## Introduction
 We are scrapping the reviews of companies on Trustpilot.com.  For each review we get information such as rating, username, review title, review content, numbers of reviews written by the user and whether the user recieved a reply by the company. 
@@ -40,4 +41,4 @@ $ python web_scrapping.py www.monday.com 20
 ```
 
 ## ERD
-![ERD](/Users/alberttamman/Documents/ITC/project/erd_trustpilot.png)
+![ERD](erd_trustpilot.png)

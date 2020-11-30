@@ -1,8 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from constants import constant
 from reviewer import Reviewer
-import sys
 import csv
 import argparse
 
@@ -43,7 +41,7 @@ def sort_review_card(review_card, run):
             return False
         else:
             list_string_reviewer.append(review_string)
-            reviewer.save_to_csv()
+            # reviewer.save_to_csv()
             reviewer.save_to_sql()
 
     return run

@@ -2,11 +2,10 @@ import mysql.connector
 
 
 def create_db():
-    my_str = ''
     my_db = mysql.connector.connect(
         host="localhost",
-        user="ashi",
-        password = my_str
+        user="root",
+        password='123456'
     )
 
     my_cursor = my_db.cursor()
