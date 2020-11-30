@@ -2,6 +2,7 @@ import sys
 import csv
 import mysql.connector
 
+
 class Reviewer:
     def __init__(self, name, rating, title, content, rev_wrote, replied):
         self.name = name
