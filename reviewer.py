@@ -1,6 +1,7 @@
 import csv
 import mysql.connector
 import re
+from config import conf
 
 
 class Reviewer:
@@ -30,9 +31,9 @@ class Reviewer:
 
     def save_to_sql(self):
         my_db = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password='123456'
+            host=conf.host,
+            user=conf.user,
+            password=conf.password
         )
 
         my_cursor = my_db.cursor()

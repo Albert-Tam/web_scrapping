@@ -1,11 +1,12 @@
 import mysql.connector
+from config import conf
 
 
 def create_db():
     my_db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password='123456'
+        host=conf.host,
+        user=conf.user,
+        password=conf.password
     )
 
     my_cursor = my_db.cursor()
