@@ -5,6 +5,8 @@ import argparse
 
 import sqlite3
 import pymysql.cursors
+import mysql.connector
+
 import os
 import contextlib
 from tqdm import notebook
@@ -71,7 +73,7 @@ def scrap(company, num_pages):
             rating = review.find('img').attrs.get('alt')
             ratings.append(rating)
             # Review title
-            title = review.find('a', class_='link link--large link--dark').get_text()
+            title = review.find('a', class_='link link--large link--dark').get_text(strip=True)
             titles.append(title)
             # Review content
             if review.find('p', class_='review-content__text'):
@@ -85,9 +87,9 @@ def scrap(company, num_pages):
             # Replied received
             reply = review.find('div', class_='review__company-reply')
             if reply:
-                replies.append(True)
+                replies.append(1)
             else:
-                replies.append(False)
+                replies.append(0)
 
             # country and parse another page
     countries = parse_another_page(urls)
@@ -134,42 +136,85 @@ def export_csv(company, num_pages):
     companies_df.to_csv('companies.csv')
 
 
-# def export_sql(company, num_pages):
-#     """Stores results to pandas df and creates a csv file."""
-#     reviews_dict, users_dict, companies_dict = scrap(company, num_pages)
-#     reviews_df = pd.DataFrame(reviews_dict)
-#     users_df = pd.DataFrame(users_dict)
-#     companies_df = pd.DataFrame(companies_dict)
-#
-#     connection = pymysql.connect(host='localhost',
-#                                  user='root',
-#                                  password='123456',
-#                                  db='TestDB1.db',
-#                                  charset='utf8mb4',
-#                                  cursorclass=pymysql.cursors.DictCursor)
-#
-#     c = connection.cursor()
-#     users_table = """
-#         CREATE TABLE Users (
-#           user_name varchar(255),
-#           country varchar(255),
-#           rev_wrote int,
-#           PRIMARY KEY (user_id)
-#           );
-#         """
-#     with connection.cursor() as cursor:
-#         cursor.execute(users_table)
-#         connection.commit()
-#
-#     users_df.to_sql('USERS', connection, if_exists='replace', index=False)
-#
-#     c.execute('''
-#     SELECT * FROM USERS
-#               ''')
-#
-#     for row in c.fetchall():
-#         print(row)
+def export_sql(company, num_pages):
+    """Stores results to pandas df and creates a csv file."""
+    reviews_dict, users_dict, companies_dict = scrap(company, num_pages)
+    reviews_df = pd.DataFrame(reviews_dict)
+    users_df = pd.DataFrame(users_dict)
+    companies_df = pd.DataFrame(companies_dict)
 
+    connection = pymysql.connect(host='localhost',
+                                 user='root',
+                                 password='123456',
+                                 charset='utf8mb4',
+                                 cursorclass=pymysql.cursors.DictCursor)
+
+    try:
+        c = connection.cursor()
+        c.execute('CREATE DATABASE trustpilot')
+        c.execute('USE trustpilot')
+
+        users_table = """
+            CREATE TABLE Users (
+                user_id int NOT NULL AUTO_INCREMENT,
+                user_name varchar(255),
+                country varchar(255),
+                rev_wrote int,
+                PRIMARY KEY (user_id)
+              );
+            """
+
+        companies_table = """
+                    CREATE TABLE Companies (
+                        company_id int NOT NULL AUTO_INCREMENT,
+                        company_names varchar(255),
+                        company_ratings varchar(255),
+                        website varchar(255),
+                        num_reviews int,
+                        PRIMARY KEY (company_id)
+                        );
+                        """
+
+        reviews_table = """
+                    CREATE TABLE Reviews (
+                        review_id int NOT NULL AUTO_INCREMENT,
+                        rating int,
+                        title varchar(255),
+                        content varchar(255),
+                        replies int,
+                        user_id int,
+                        company_id int,
+                        PRIMARY KEY (review_id),
+                        FOREIGN KEY (user_id) REFERENCES Users (user_id),
+                        FOREIGN KEY (company_id) REFERENCES Companies (company_id)
+                        );
+                        """
+
+        # with connection.cursor() as cursor:
+        c.execute(users_table)
+        c.execute(companies_table)
+        c.execute(reviews_table)
+
+        c.execute("SHOW TABLES")
+
+        rows = c.fetchall()
+        for row in rows:
+            print(row)
+
+    except Exception as e:
+        print("Exception occured:{}".format(e))
+
+    finally:
+        c.close()
+
+    # users_df.to_sql('USERS', connection, if_exists='replace', index=False)
+    #
+    # c.execute('''
+    # SELECT * FROM USERS
+    #           ''')
+    #
+    # for row in c.fetchall():
+    #     print(row)
 
 
 def main():
@@ -182,13 +227,8 @@ def main():
     company = args.company
     num_pages = args.num_pages
     print('Scrapping data from ' + company)
-    # scrap(company, num_pages)
     export_csv(company, num_pages)
-
-
-
-
-
+    # export_sql(company, num_pages)
 
 
 if __name__ == '__main__':
