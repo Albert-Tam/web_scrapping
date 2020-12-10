@@ -249,6 +249,5 @@ def main():
 
 if __name__ == '__main__':
     check_status()
-    #sys.exit()
     logging.info("logging file")
     main()
