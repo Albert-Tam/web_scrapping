@@ -1,5 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
+
+#configuration files
+config.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -139,4 +143,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+!/config.py
+!/config.py
 !/config.py
