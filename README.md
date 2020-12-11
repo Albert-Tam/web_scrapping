@@ -33,7 +33,7 @@ $ pip install -r requirements.txt
 - Run and choose your company to scrap from and the number of pages (20 reviews per pages).
  If you would like to scrap all pages enter 'all': 
 ```
-$ python web_scrapping.py --company --pages
+$ python scrapper.py --company --pages
 ```
 Example:
 ```
