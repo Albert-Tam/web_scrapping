@@ -37,7 +37,7 @@ $ python scrapper.py --company --pages
 ```
 Example:
 ```
-$ python web_scrapping.py www.monday.com 20
+$ python scrapper.py www.monday.com 20
 ```
 
 ## ERD
