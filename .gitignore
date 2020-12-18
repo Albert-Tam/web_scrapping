@@ -141,6 +141,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-#configuration files
-config.py
-!/config.py
+##configuration files
+#config.py
+#!/config.py
