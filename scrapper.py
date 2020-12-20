@@ -32,12 +32,15 @@ def scrap(company, num_pages):
     urls = []
     symbols = []
 
-    for p in range(1, int(num_pages)):
+    headers = requests.utils.default_headers()
+    headers.update({
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
 
-        page_url = requests.get('https://www.trustpilot.com/review/' + company + '?page=' + str(p))
+    for p in range(1, int(num_pages)):
+        page_url = requests.get('https://www.trustpilot.com/review/' + company + '?page=' + str(p), headers=headers)
         soup = BeautifulSoup(page_url.content, 'html.parser')
         review_card = soup.find_all('div', class_='review-card')
-
         # find website of the company
         # I do it just one time
         # TODO LOOK AT THIS we need to put
@@ -54,16 +57,13 @@ def scrap(company, num_pages):
             company_ratings.append(company_rating)
             symbol = yahoo_finance(company_name)
             symbols.append(symbol)
-
         # get url for each user
         user_url = soup.find_all('a', href=True)
         for a in user_url:
             user_id = a['href']
             if '/users/5' in user_id and user_id not in urls:
                 urls.append(user_id)
-
         for review in review_card:
-
             # Username
             name = review.find('div', class_='consumer-information__name').get_text(strip=True)
             names.append(name)
@@ -88,28 +88,23 @@ def scrap(company, num_pages):
                 replies.append(1)
             else:
                 replies.append(0)
-
             # country and parse another page
     countries = parse_another_page(urls)
-
     reviews_dict = {'ratings': ratings,
                     'titles': titles,
                     'contents': contents,
                     'replies': replies
                     }
-
     users_dict = {'names': names,
                   'countries': countries,
                   'rev_wrote': rev_wrote
                   }
-
     companies_dict = {'company_names': company_names,
                       'company_ratings': company_ratings,
                       'website': website,
                       'num_reviews': num_reviews,
                       'symbols': symbols
                       }
-
     return reviews_dict, users_dict, companies_dict
 
 
@@ -156,7 +151,6 @@ def export_sql(company, num_pages):
         c = connection.cursor()
         c.execute('CREATE DATABASE trustpilot')
         c.execute('USE trustpilot')
-
         users_table = """ CREATE TABLE Users (
                     user_id int NOT NULL UNIQUE AUTO_INCREMENT,
                     user_name varchar(255),
@@ -193,26 +187,24 @@ def export_sql(company, num_pages):
         c.execute(users_table)
         c.execute(companies_table)
         c.execute(reviews_table)
-
     c.execute("SET GLOBAL sql_mode='';")
-
+    companies_insert_query = 'INSERT INTO Companies(company_names,company_ratings,website,num_reviews) VALUES (%s,%s,%s,%s) '
+    c.execute(companies_insert_query, (companies_dict['company_names'][0], companies_dict['company_ratings'][0],
+                                       companies_dict['website'][0], companies_dict['num_reviews'][0]))
+    company_id = c.lastrowid
     for i in range(len(reviews_dict['ratings']) - 1):
         # print(reviews_dict['ratings'][i])
-        reviews_insert_query = 'INSERT INTO Reviews(rating,title,content,replies) VALUES (%s,%s,%s,%s)'
-        c.execute(reviews_insert_query,
-                  (reviews_dict['ratings'][i], reviews_dict['titles'][i], reviews_dict['contents'][i],
-                   reviews_dict['replies'][i]))
         users_insert_query = 'INSERT INTO Users(user_name,country,rev_wrote) VALUES (%s,%s,%s)'
         c.execute(users_insert_query,
                   (users_dict['names'][i], users_dict['countries'][i], users_dict['rev_wrote'][i]))
+        # get user id foreign key
+        user_id = c.lastrowid
+        reviews_insert_query = 'INSERT INTO Reviews(rating,title,content,replies, user_id, company_id) VALUES (%s,%s,%s,%s,%s,%s)'
+        c.execute(reviews_insert_query,
+                  (reviews_dict['ratings'][i], reviews_dict['titles'][i], reviews_dict['contents'][i],
+                   reviews_dict['replies'][i], user_id, company_id))
     # c.commit()
-
-    companies_insert_query = 'INSERT INTO Companies(company_names,company_ratings,website,num_reviews,symbols) VALUES ' \
-                             '(%s,%s,%s,%s,%s) '
-    c.execute(companies_insert_query, (companies_dict['company_names'][0], companies_dict['company_ratings'][0],
-                                       companies_dict['website'][0], companies_dict['num_reviews'][0],
-                                       companies_dict['symbols'][0]))
-
+    # insert foreign key company
     c.close()
     connection.commit()
 
@@ -220,24 +212,19 @@ def export_sql(company, num_pages):
 def yahoo_finance(company_name):
     """Gets the company's stock symbol if it is publicly traded"""
     url = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/auto-complete"
-
     querystring = {"q": company_name, "region": "US"}
-
     headers = {
         'x-rapidapi-key': conf.api_key,
         'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com"
     }
-
     response = requests.request("GET", url, headers=headers, params=querystring)
     resp_str = response.text
     resp_dict = json.loads(resp_str)
-
     try:
         quote = resp_dict['quotes'][0]
         symbol = quote['symbol']
     except IndexError:
         symbol = ''
-
     return symbol
 
 
@@ -248,7 +235,6 @@ def main():
     parser.add_argument('company', help='company_name')
     parser.add_argument('num_pages', help='page limit')
     args = parser.parse_args()
-
     company = args.company
     num_pages = args.num_pages
     print('Scrapping data from ' + company)
